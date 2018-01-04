@@ -157,7 +157,7 @@ void reconnect() {
     Serial.println(F("Attempting MQTT Connection..."));
 
     // Connect Publisher to broker
-    if (client.connect("CB_MP_Publisher", "cbraines", "Tp:5tF'<5dc_k@;<")) {
+    if (client.connect("CB_MP_Subscriber", "cbraines", "Tp:5tF'<5dc_k@;<")) {
       Serial.println(F("... connected"));
 
       
@@ -217,8 +217,11 @@ void call_Back(char* topic, byte* payload, unsigned int messLength){
   
   char searchBuffer[27];
   
-  //Sub-sorting running to prevent needless checks
-
+  // Sub-sorting running to prevent needless checks
+  // tops = {"temp-", "light-", "moisture-", "humidity-", "pir-"}
+  // mids = {"heater-", "intake-", "steamer-", "exhaust-"}
+  // bots = {"level", "pwm", "threshold", "override", "ack"}
+  
   /*
   * Temperature processing START
   * Heater and intake are symboliclly linked so must always be
@@ -642,12 +645,9 @@ void control_Pin(struct OperationPin *Holder){
 
 void update_Pwm(struct OperationPin *Holder, uint8_t pwm){
   // If pin is on, update the live and stored PWM, else just stored
+  Holder->pwm = pwm;
   if(Holder->state == 1){
-    Holder->pwm = pwm;
     analogWrite(Holder->pin, Holder->pwm);
-  }
-  else{
-    Holder->pwm;
   }
 }
 
