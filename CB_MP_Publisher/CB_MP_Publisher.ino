@@ -49,7 +49,7 @@ uint8_t count3 = 1;
     
   // Init Serial for debugging and general client side messages
   Serial.begin(9600);
-  Serial.println("Starting MQTT client on arduino ...");
+  Serial.println(F("Starting MQTT client on arduino ..."));
 
   // Set MQTT server
   client.setServer("brain.engineering", 1883);
@@ -68,14 +68,14 @@ uint8_t count3 = 1;
   // Connect to network
   if (Ethernet.begin(mac) == 0){
   // Fallback if no DHCP
-  Serial.println("Failed to configure ethernet using DHCP");
+  Serial.println(F("Failed to configure ethernet using DHCP"));
   Ethernet.begin(mac, ip);
   }
   
   // Delay to ensure everything set
   delay(1500);
 
-  Serial.print("MQTT client is at: ");
+  Serial.print(F("MQTT client is at: "));
   Serial.println(Ethernet.localIP());
   
   
@@ -115,7 +115,7 @@ void loop() {
  
 
 
-// Every 5 seconds, print new sensor value to LCD
+// Every 2 seconds, print new sensor value to LCD
 if (millis() > (ts3 + 2000)){
 
   switch(count3){
@@ -181,9 +181,9 @@ void call_Back(char* topic, byte* payload, unsigned int messLength){
     data[i] = payload[i]; 
   }
   data[messLength] = '\0';
-  Serial.print("message arrived [");
+  Serial.print(F("message arrived ["));
   Serial.print(topic);
-  Serial.print("] ");
+  Serial.print(F("] "));
   Serial.println(data);
 
   // Check calibration has been pressed
@@ -202,7 +202,7 @@ void reconnect() {
     // Connect Publisher to broker
     /*!CHANGE BROKER AND FEEDS TO brain.engineering and /f/... !*/
     if (client.connect("CB_MP_Publisher", "mpearson", "passw0rd")) {
-      Serial.println("... connected");
+      Serial.println(F("... connected"));
 
       client.publish("cbraines/f/message-log", "Publisher begun");
 
@@ -214,7 +214,7 @@ void reconnect() {
      // client.subscribe("/f/humidity-level"); 
      // client.subscribe("/f/moisture-level"); 
      // client.subscribe("/f/pir-level"); 
-     // client.subscribe("/f/recalibrate-ldr");
+     client.subscribe("/f/recalibrate-ldr");
 
       // Perform setup tasks
       calibrate_Ldr(&maxLevel, &minLevel);
@@ -224,9 +224,9 @@ void reconnect() {
     }
     // Attempt Reconnect
     else {
-      Serial.print("Failed, RC = ");
+      Serial.print(F("Failed, RC = "));
       Serial.print(client.state());
-      Serial.println(" trying again in ~5 seconds");
+      Serial.println(F(" trying again in ~5 seconds"));
 
       /*!HARD DELAY USED HERE AS NO NEED PUB OCCURS ON THIS BOARD!*/
       delay(5000);
@@ -241,29 +241,29 @@ void calibrate_Ldr(uint16_t *maxL, uint16_t *minL){
   uint8_t count = 1;
   *maxL = 0;
   *minL = 1023;
-  Serial.println("Begin calibration now:");
+  Serial.println(F("Begin calibration now:"));
   while (millis() < (ts + 5000)){
     if ((count == 1) && (millis() < ts + 1000)){
       count++;
-      Serial.println("5");
+      Serial.println(F("5"));
     }
     else if ((count == 2) && (millis() > ts + 1000) && (millis() < ts + 2000)){
       count++;
-      Serial.println("4");
+      Serial.println(F("4"));
     }
     else if ((count == 3) && (millis() > ts + 2000) && (millis() < ts + 3000)){
       count++;
-      Serial.println("3");
+      Serial.println(F("3"));
     }
     else if ((count == 4) && (millis() > ts + 3000) && (millis() < ts + 4000)){
       count++;
-      Serial.println("2");
+      Serial.println(F("2"));
     }
     else if ((count == 5) && (millis() > ts + 4000) && (millis() < ts + 5000)){
       count++;
-      Serial.println("1");
+      Serial.println(F("1"));
     }
-    int light = analogRead(A0);
+    int light = analogRead(lightsensor);
     if (light > *maxL){
       *maxL= light;
     }
@@ -272,6 +272,7 @@ void calibrate_Ldr(uint16_t *maxL, uint16_t *minL){
     }
   }
   client.publish("/f/message-log","LDR recalibrated");
+  
 }
 
 
@@ -279,7 +280,6 @@ void calibrate_Ldr(uint16_t *maxL, uint16_t *minL){
 void send_Light(uint16_t *maxL, uint16_t *minL){
   if (client.connected()){
     light = analogRead(lightsensor);
-
     // Remap light value
     light = map(light, *minL, *maxL, 0, 100);
     // Stop value from exceeding upper and lower bounds
@@ -334,6 +334,7 @@ void send_Moisture(){
     moisture = analogRead(moisturesensor);
 
     moisture = map(moisture, 0, 1023, 0, 100);
+    moisture = 100 - moisture;
     char feed[] = "/f/moisture-level";
     send_Data(feed, moisture);
   }

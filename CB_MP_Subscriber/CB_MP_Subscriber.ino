@@ -42,8 +42,8 @@ struct OperationPin {
 struct OperationPin Heater    = {1,   8,    0,    0,    0,    20,   "/f/temp-heater-"};
 struct OperationPin Solenoid  = {2,   4,    0,    0,    0,    80,   "/f/moisture-"};
 struct OperationPin Steamer   = {3,   7,    0,    0,    0,    20,   "/f/humidity-steamer-"};
-struct OperationPin Exhaust   = {4,   9,    0,    150,  0,    40,   "/f/humidity-exhaust-"};
-struct OperationPin Intake    = {5,   5,    0,    150,  0,    25,   "/f/temp-intake-"};
+struct OperationPin Exhaust   = {4,   9,    0,    255,  0,    40,   "/f/humidity-exhaust-"};
+struct OperationPin Intake    = {5,   5,    0,    255,  0,    25,   "/f/temp-intake-"};
 struct OperationPin Lighting  = {6,   3,    0,    255,  0,    30,   "/f/light-"};
 struct OperationPin Buzzer    = {7,   6,    0,    2,    0,    0,    "/f/pir-"};
 struct OperationPin Empty     = {0,   0,    0,    0,    0,    0,    ""};
@@ -236,8 +236,8 @@ void call_Back(char* topic, byte* payload, unsigned int messLength){
     strcat(searchBuffer, bots[0]);
     // Auto switches between Heater and intake as long as no override on
     if (t.indexOf(searchBuffer) > 0){
-      uint8_t temp = atoi(data);
-  
+      int8_t temp = atoi(data);
+    
       if(Heater.overrider != 1 && Intake.overrider != 1){
         if(temp <= Heater.threshold){
           Heater.state = 1;
